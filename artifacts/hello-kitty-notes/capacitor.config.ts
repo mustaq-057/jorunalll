@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Journal',
   webDir: 'dist',
   server: {
-    url: 'https://journal-api-server-nine.vercel.app',
+    url: 'https://jorunalll.vercel.app',
     cleartext: true
   }
 };

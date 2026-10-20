@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -32,6 +35,8 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build Web App
+        env:
+          VITE_API_URL: https://jorunalll.vercel.app
         run: pnpm --filter @workspace/hello-kitty-notes run build
         
       - name: Sync Capacitor
@@ -44,9 +49,30 @@ jobs:
           cd artifacts/hello-kitty-notes/android
           chmod +x gradlew
           ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Hello-Kitty-Journal.apk
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Hello-Kitty-Notes.apk
-          path: artifacts/hello-kitty-notes/android/app/build/outputs/apk/debug/app-debug.apk
+          name: Hello-Kitty-Journal-APK
+          path: artifacts/hello-kitty-notes/android/app/build/outputs/apk/debug/Hello-Kitty-Journal.apk
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        with:
+          tag_name: v1.0.0
+          name: "Hello Kitty Journal Android APK"
+          body: |
+            ### 🎀 Hello Kitty Journal Android APK
+            - **Live Hosted URL:** https://jorunalll.vercel.app/
+            - **Commit:** ${{ github.sha }}
+            
+            #### 📱 How to Install:
+            1. Tap `Hello-Kitty-Journal.apk` below to download directly to your phone.
+            2. Open the file to install (allow "Install unknown apps" if prompted).
+            3. Open the app to access your journal from anywhere!
+          files: artifacts/hello-kitty-notes/android/app/build/outputs/apk/debug/Hello-Kitty-Journal.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
