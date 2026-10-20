@@ -7,8 +7,6 @@ import { format } from 'date-fns';
 import { HeroHelloKitty, SadHelloKitty, StickerIcon } from '@/components/hello-kitty-svgs';
 import { RichText } from '@/components/rich-text';
 import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getEntryFont, cleanDisplayTags } from '@/lib/fonts';
 
 const colorMap: Record<string, string> = {
   blush: 'bg-[#FFD1DC] text-[#4A3540] border-[#FFB7D1]',
@@ -244,40 +242,34 @@ export function Home() {
                         </div>
                       </div>
                       
-                      {(() => {
-                        const entryFont = getEntryFont(entry.tags);
-                        const displayTags = cleanDisplayTags(entry.tags);
-                        return (
-                          <div className="pl-2 relative z-10 flex-1 flex flex-col">
-                            <h3 className={cn("text-2xl md:text-3xl mb-3 line-clamp-1 group-hover:text-primary transition-colors", entryFont.className)}>
-                              {entry.title || 'Dear Diary...'}
-                            </h3>
-                            
-                            <p className={cn("text-foreground/80 line-clamp-3 leading-relaxed mb-6 text-xl", entryFont.className)}>
-                              <RichText content={entry.body} />
-                            </p>
+                      <div className="pl-2 relative z-10 flex-1 flex flex-col">
+                        <h3 className="font-heading text-2xl md:text-3xl mb-3 line-clamp-1 group-hover:text-primary transition-colors">
+                          {entry.title || 'Dear Diary...'}
+                        </h3>
+                        
+                        <p className="font-secondary text-foreground/80 line-clamp-3 leading-relaxed mb-6 text-lg">
+                          <RichText content={entry.body} />
+                        </p>
 
-                            <div className="mt-auto flex flex-col gap-4">
-                              {/* Tags */}
-                              {displayTags && displayTags.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                  {displayTags.map(tag => (
-                                    <span key={tag} className="px-3 py-1 bg-secondary/30 text-primary font-bold text-xs rounded-full border border-primary/20">
-                                      #{tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              
-                              {/* Character count */}
-                              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider opacity-60">
-                                <StickerIcon name="star" className="w-3 h-3" />
-                                <span>{entry.body.replace(/<[^>]*>/g, '').trim().length} characters</span>
-                              </div>
+                        <div className="mt-auto flex flex-col gap-4">
+                          {/* Tags */}
+                          {entry.tags && entry.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {entry.tags.map(tag => (
+                                <span key={tag} className="px-3 py-1 bg-secondary/30 text-primary font-bold text-xs rounded-full border border-primary/20">
+                                  #{tag}
+                                </span>
+                              ))}
                             </div>
+                          )}
+                          
+                          {/* Character count */}
+                          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider opacity-60">
+                            <StickerIcon name="star" className="w-3 h-3" />
+                            <span>{entry.body.replace(/<[^>]*>/g, '').trim().length} characters</span>
                           </div>
-                        );
-                      })()}
+                        </div>
+                      </div>
 
                       {/* Hover sparkle */}
                       <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 scale-50 group-hover:scale-100 duration-300 text-primary">

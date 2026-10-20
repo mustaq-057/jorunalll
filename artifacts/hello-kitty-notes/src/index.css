@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@500;600;700&family=Indie+Flower&family=Nunito:wght@400;600;700;800&family=Pacifico&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@400;600;700&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&family=Quicksand:wght@400;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -98,36 +98,3 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary)); 
 }
-
-/* Custom Aesthetic Diary Fonts */
-.font-caveat { font-family: 'Caveat', cursive !important; }
-.font-indie-flower { font-family: 'Indie Flower', cursive !important; }
-.font-dancing-script { font-family: 'Dancing Script', cursive !important; }
-.font-patrick-hand { font-family: 'Patrick Hand', cursive !important; }
-.font-playfair { font-family: 'Playfair Display', serif !important; }
-.font-typewriter { font-family: 'Special Elite', monospace !important; }
-.font-quicksand { font-family: 'Quicksand', sans-serif !important; }
-.font-nunito { font-family: 'Nunito', sans-serif !important; }
-
-/* Notebook Paper Styles */
-.paper-lined {
-  background-image: repeating-linear-gradient(
-    transparent,
-    transparent 35px,
-    rgba(255, 130, 170, 0.22) 35px,
-    rgba(255, 130, 170, 0.22) 36px
-  );
-  line-height: 36px !important;
-}
-
-.paper-grid {
-  background-size: 24px 24px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 130, 170, 0.18) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 130, 170, 0.18) 1px, transparent 1px);
-}
-
-.paper-blank {
-  background-image: none;
-}
-

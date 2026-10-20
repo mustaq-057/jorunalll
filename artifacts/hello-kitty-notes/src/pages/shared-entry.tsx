@@ -5,8 +5,6 @@ import { MoodIcon } from '@/components/mood-icon';
 import { format } from 'date-fns';
 import { StickerIcon } from '@/components/hello-kitty-svgs';
 import { RichText } from '@/components/rich-text';
-import { cn } from '@/lib/utils';
-import { getEntryFont, getEntryPaper, cleanDisplayTags } from '@/lib/fonts';
 
 const COLORS: Record<string, string> = {
   blush: '#FFD1DC',
@@ -75,65 +73,51 @@ export function SharedEntry() {
           style={{ backgroundColor: bgColor }}
         />
 
-        {(() => {
-          const entryFont = getEntryFont(entry.tags);
-          const entryPaper = getEntryPaper(entry.tags);
-          const displayTags = cleanDisplayTags(entry.tags);
-          return (
-            <>
-              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-8">
-                <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                  <h1 className={cn("text-4xl md:text-5xl text-primary drop-shadow-sm leading-tight mb-2", entryFont.className)}>
-                    {entry.title || "Untitled Memory"}
-                  </h1>
-                  <div className="flex items-center gap-2 text-muted-foreground font-bold text-sm uppercase tracking-widest">
-                    <span>{format(entry.createdAt, 'MMMM do, yyyy')}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <MoodIcon mood={entry.mood} className="w-4 h-4" />
-                      {entry.mood}
-                    </span>
-                  </div>
-                </div>
-              </div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-8">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-heading text-primary drop-shadow-sm leading-tight mb-2">
+              {entry.title || "Untitled Memory"}
+            </h1>
+            <div className="flex items-center gap-2 text-muted-foreground font-bold text-sm uppercase tracking-widest">
+              <span>{format(entry.createdAt, 'MMMM do, yyyy')}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <MoodIcon mood={entry.mood} className="w-4 h-4" />
+                {entry.mood}
+              </span>
+            </div>
+          </div>
+        </div>
 
-              {parseMediaUrls(entry.imageUrl).length > 0 && (
-                <div className="relative z-10 flex flex-wrap gap-4 mb-8">
-                  {parseMediaUrls(entry.imageUrl).map((url, i) => (
-                    <div key={i} className="rounded-[2rem] overflow-hidden border border-border shadow-sm flex-1 min-w-[250px]">
-                      <img src={url} alt={`Memory photo ${i + 1}`} className="w-full max-h-[500px] object-cover" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="relative z-10">
-                <div className={cn(
-                  "w-full min-h-[300px] text-2xl text-foreground whitespace-pre-wrap break-words p-6 rounded-3xl",
-                  entryFont.className,
-                  entryPaper.className,
-                  entryPaper.id === 'lined' ? 'leading-[36px]' : 'leading-[1.9]'
-                )}>
-                  <RichText content={entry.body} />
-                </div>
+        {parseMediaUrls(entry.imageUrl).length > 0 && (
+          <div className="relative z-10 flex flex-wrap gap-4 mb-8">
+            {parseMediaUrls(entry.imageUrl).map((url, i) => (
+              <div key={i} className="rounded-[2rem] overflow-hidden border border-border shadow-sm flex-1 min-w-[250px]">
+                <img src={url} alt={`Memory photo ${i + 1}`} className="w-full max-h-[500px] object-cover" />
               </div>
+            ))}
+          </div>
+        )}
 
-              <div className="relative z-10 mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border/50 pt-6">
-                <div className="flex flex-wrap gap-2">
-                  {displayTags.map(t => (
-                    <span key={t} className="px-3 py-1 bg-secondary/30 text-primary font-bold text-xs uppercase tracking-wider rounded-md border border-primary/10">
-                      #{t}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest bg-white/80 px-4 py-2 rounded-full border border-border">
-                  <span>{(entry.body || '').length} characters</span>
-                </div>
-              </div>
-            </>
-          );
-        })()}
+        <div className="relative z-10">
+          <div className="w-full min-h-[300px] text-xl font-secondary leading-[1.8] text-foreground whitespace-pre-wrap break-words">
+            <RichText content={entry.body} />
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border/50 pt-6">
+          <div className="flex flex-wrap gap-2">
+            {entry.tags?.map(t => (
+              <span key={t} className="px-3 py-1 bg-secondary/30 text-primary font-bold text-xs uppercase tracking-wider rounded-md border border-primary/10">
+                #{t}
+              </span>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest bg-white/80 px-4 py-2 rounded-full border border-border">
+            <span>{(entry.body || '').length} characters</span>
+          </div>
+        </div>
       </div>
     </div>
   );

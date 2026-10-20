@@ -4,11 +4,10 @@ import { useJournal, Mood, ThemeColor, getWordCount, getReadingTime, parseMediaU
 import { MoodIcon } from '@/components/mood-icon';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Save, Trash2, Tag, Camera, X, Share2, Mic, Square, Play, Pause, Type, FileText } from 'lucide-react';
+import { ChevronLeft, Save, Trash2, Tag, Camera, X, Share2, Mic, Square, Play, Pause } from 'lucide-react';
 import { format } from 'date-fns';
 import { SaveHelloKitty, StickerIcon } from '@/components/hello-kitty-svgs';
 import { RichText } from '@/components/rich-text';
-import { FONT_OPTIONS, PAPER_OPTIONS, getEntryFont, getEntryPaper, cleanDisplayTags, getGlobalFont, getGlobalPaper, PaperStyle } from '@/lib/fonts';
 
 const MOODS: Mood[] = ['happy', 'sad', 'excited', 'calm', 'tired', 'loved'];
 const COLORS: { id: ThemeColor; value: string; label: string }[] = [
@@ -201,10 +200,6 @@ export function Editor() {
   const [mood, setMood] = useState<Mood>('happy');
   const [color, setColor] = useState<ThemeColor>('blush');
   const [tags, setTags] = useState<string[]>([]);
-  const [selectedFont, setSelectedFont] = useState<string>(() => getGlobalFont());
-  const [selectedPaper, setSelectedPaper] = useState<PaperStyle>(() => getGlobalPaper());
-  const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
-  const [isPaperPickerOpen, setIsPaperPickerOpen] = useState(false);
   const [showSaveAnim, setShowSaveAnim] = useState(false);
   const [isTagPickerOpen, setIsTagPickerOpen] = useState(false);
   const [kittyModal, setKittyModal] = useState<{ open: boolean; message: string; onConfirm?: () => void }>({ open: false, message: '' });
@@ -233,11 +228,7 @@ export function Editor() {
         setBody(entry.body);
         setMood(entry.mood);
         setColor(entry.color);
-        setTags(cleanDisplayTags(entry.tags || []));
-        const entryFont = getEntryFont(entry.tags);
-        const entryPaper = getEntryPaper(entry.tags);
-        setSelectedFont(entryFont.id);
-        setSelectedPaper(entryPaper.id as PaperStyle);
+        setTags(entry.tags || []);
         // Parse existing media URLs
         const parsedImgs = parseMediaUrls(entry.imageUrl);
         setLocalImages(parsedImgs.map(url => ({ url })));
@@ -262,16 +253,13 @@ export function Editor() {
       const keptImageUrls = localImages.filter(img => !img.file).map(img => img.url);
       const keptAudioUrls = localAudios.filter(aud => !aud.blob).map(aud => aud.url);
 
-      const cleanedUserTags = cleanDisplayTags(tags);
-      const finalTags = [...cleanedUserTags, `font:${selectedFont}`, `paper:${selectedPaper}`];
-
       if (isNew) {
-        const entry = await addEntry({ title, body, mood, color, tags: finalTags });
+        const entry = await addEntry({ title, body, mood, color, tags });
         entryId = entry.id;
       } else {
         // Pass the kept URLs so any deleted images/audios are removed on the server
         await updateEntry(entryId, {
-          title, body, mood, color, tags: finalTags,
+          title, body, mood, color, tags,
           imageUrl: JSON.stringify(keptImageUrls),
           audioUrl: JSON.stringify(keptAudioUrls),
         });
@@ -472,9 +460,6 @@ export function Editor() {
       ? format(toMoroccoTime(entries.find(e => e.id === params.id)!.createdAt), 'MMMM do, yyyy')
       : format(toMoroccoTime(Date.now()), 'MMMM do, yyyy');
 
-  const currentFontObj = FONT_OPTIONS.find(f => f.id === selectedFont) || FONT_OPTIONS[0];
-  const currentPaperObj = PAPER_OPTIONS.find(p => p.id === selectedPaper) || PAPER_OPTIONS[0];
-
 
 
   if (!isLoaded) return null;
@@ -641,10 +626,7 @@ export function Editor() {
                 e.target.style.height = (e.target.scrollHeight) + 'px';
               }}
               rows={1}
-              className={cn(
-                "w-full text-4xl md:text-5xl text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/40 focus:ring-0 leading-tight resize-none overflow-hidden block transition-all",
-                currentFontObj.className
-              )}
+              className="w-full text-4xl md:text-5xl font-heading text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/40 focus:ring-0 leading-tight resize-none overflow-hidden block"
               style={{ minHeight: '1.2em' }}
             />
           </div>
@@ -897,144 +879,9 @@ export function Editor() {
         </div>
 
 
-        {/* Aesthetics Toolbar: Font Selector & Paper Style & Stickers */}
-        <div className="flex items-center gap-3 mb-4 flex-wrap relative z-20">
-          {/* Font Picker Button & Floating Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsFontPickerOpen(!isFontPickerOpen);
-                setIsPaperPickerOpen(false);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white text-foreground rounded-full border border-primary/20 shadow-sm text-sm font-bold transition-all cursor-pointer hover:border-primary/50"
-            >
-              <Type className="w-4 h-4 text-primary" />
-              <span>Font: <strong className="text-primary">{currentFontObj.name}</strong></span>
-            </button>
-
-            <AnimatePresence>
-              {isFontPickerOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                  className="absolute left-0 top-full mt-2 w-72 bg-white/95 backdrop-blur-md rounded-2xl border border-primary/20 shadow-xl p-2 z-50 max-h-80 overflow-y-auto space-y-1"
-                >
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2 py-1">
-                    Pick Handwriting Style
-                  </p>
-                  {FONT_OPTIONS.map((f) => {
-                    const isSelected = selectedFont === f.id;
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedFont(f.id);
-                          setIsFontPickerOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left p-2.5 rounded-xl transition-all cursor-pointer flex flex-col gap-0.5",
-                          isSelected
-                            ? "bg-primary text-white shadow-sm"
-                            : "hover:bg-secondary/30 text-foreground"
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs">{f.name}</span>
-                          {isSelected && <span className="text-xs font-bold">✓</span>}
-                        </div>
-                        <span className={cn("text-base truncate", f.className, isSelected ? "text-white/90" : "text-muted-foreground")}>
-                          {f.sample}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Paper Texture Selector */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsPaperPickerOpen(!isPaperPickerOpen);
-                setIsFontPickerOpen(false);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white text-foreground rounded-full border border-primary/20 shadow-sm text-sm font-bold transition-all cursor-pointer hover:border-primary/50"
-            >
-              <FileText className="w-4 h-4 text-primary" />
-              <span>Paper: <strong className="text-primary">{currentPaperObj.name}</strong></span>
-            </button>
-
-            <AnimatePresence>
-              {isPaperPickerOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                  className="absolute left-0 top-full mt-2 w-52 bg-white/95 backdrop-blur-md rounded-2xl border border-primary/20 shadow-xl p-2 z-50 space-y-1"
-                >
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2 py-1">
-                    Notebook Texture
-                  </p>
-                  {PAPER_OPTIONS.map((p) => {
-                    const isSelected = selectedPaper === p.id;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedPaper(p.id);
-                          setIsPaperPickerOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left p-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-bold",
-                          isSelected
-                            ? "bg-primary text-white shadow-sm"
-                            : "hover:bg-secondary/30 text-foreground"
-                        )}
-                      >
-                        <span>{p.name}</span>
-                        {isSelected && <span>✓</span>}
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Sticker Inserter Toolbar */}
-          <div className="flex items-center gap-1.5 ml-auto bg-white/70 px-3 py-1.5 rounded-full border border-border/80 shadow-sm">
-            <span className="text-[11px] font-bold text-muted-foreground mr-1">Stickers:</span>
-            {STICKERS.map((stk) => (
-              <button
-                key={stk}
-                type="button"
-                onClick={() => {
-                  const tagText = `[${stk}]`;
-                  setBody(prev => prev ? `${prev} ${tagText} ` : `${tagText} `);
-                  textareaRef.current?.focus();
-                }}
-                className="p-1 hover:scale-125 transition-transform cursor-pointer"
-                title={`Insert ${stk}`}
-              >
-                <StickerIcon name={stk} className="w-4 h-4 text-primary drop-shadow-sm" />
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Main Textarea */}
         <div
-          className={cn(
-            "relative z-10 flex-1 min-h-[420px] cursor-text rounded-3xl p-4 transition-all duration-300",
-            currentPaperObj.className
-          )}
+          className="relative z-10 flex-1 min-h-[400px] cursor-text"
           onClick={() => textareaRef.current?.focus()}
           onTouchStart={() => textareaRef.current?.focus()}
         >
@@ -1049,11 +896,7 @@ export function Editor() {
             autoCorrect="off"
             spellCheck={false}
             tabIndex={0}
-            className={cn(
-              "w-full min-h-[400px] text-2xl text-foreground bg-transparent border-none outline-none resize-none focus:ring-0 p-2 cursor-text transition-all",
-              currentFontObj.className,
-              selectedPaper === 'lined' ? 'leading-[36px]' : 'leading-[1.9]'
-            )}
+            className="w-full min-h-[400px] text-xl font-secondary leading-[1.8] text-foreground bg-transparent border-none outline-none resize-none focus:ring-0 p-4 cursor-text"
           />
         </div>
       </div>
