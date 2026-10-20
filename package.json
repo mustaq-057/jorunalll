@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "build:vercel": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/hello-kitty-notes run build",
+    "build:vercel": "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/hello-kitty-notes run build && node -e \"fs.cpSync('artifacts/hello-kitty-notes/dist', 'dist', {recursive: true})\"",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
