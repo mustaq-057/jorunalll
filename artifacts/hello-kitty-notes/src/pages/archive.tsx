@@ -5,6 +5,8 @@ import { Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { StickerIcon } from '@/components/hello-kitty-svgs';
 import { MoodIcon } from '@/components/mood-icon';
+import { cn } from '@/lib/utils';
+import { getEntryFont, cleanDisplayTags } from '@/lib/fonts';
 
 function MonthCalendar({ monthStr, entries }: { monthStr: string, entries: Entry[] }) {
   const monthStart = startOfMonth(entries[0].createdAt);
@@ -113,21 +115,27 @@ export function Archive() {
                     
                     <div className={`absolute bottom-0 left-0 w-full h-1`} style={{ backgroundColor: getThemeHex(entry.color) }} />
                     
-                    <div className="h-full flex flex-col relative z-10">
-                      <span className="text-4xl font-heading text-primary mb-3 drop-shadow-sm group-hover:scale-110 transition-transform origin-left">
-                        {format(entry.createdAt, 'dd')}
-                      </span>
-                      <h4 className="font-bold text-lg font-secondary line-clamp-2 leading-tight mb-auto group-hover:text-primary transition-colors text-foreground">
-                        {entry.title || 'Untitled Memory'}
-                      </h4>
-                      {entry.tags?.[0] && (
-                        <div className="mt-4">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-secondary/30 px-2 py-1 rounded-md">
-                            #{entry.tags[0]}
+                    {(() => {
+                      const entryFont = getEntryFont(entry.tags);
+                      const displayTags = cleanDisplayTags(entry.tags);
+                      return (
+                        <div className="h-full flex flex-col relative z-10">
+                          <span className="text-4xl font-heading text-primary mb-3 drop-shadow-sm group-hover:scale-110 transition-transform origin-left">
+                            {format(entry.createdAt, 'dd')}
                           </span>
+                          <h4 className={cn("font-bold text-xl line-clamp-2 leading-tight mb-auto group-hover:text-primary transition-colors text-foreground", entryFont.className)}>
+                            {entry.title || 'Untitled Memory'}
+                          </h4>
+                          {displayTags[0] && (
+                            <div className="mt-4">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-secondary/30 px-2 py-1 rounded-md">
+                                #{displayTags[0]}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </span>
                 </Link>
               ))}
