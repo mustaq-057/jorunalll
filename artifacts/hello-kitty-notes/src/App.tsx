@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { PinLock } from '@/components/pin-lock';
 import { InactivityOverlay } from '@/components/inactivity-overlay';
@@ -11,7 +11,7 @@ import { Archive } from '@/pages/archive';
 import { Kitty } from '@/pages/kitty';
 import { Settings } from '@/pages/settings';
 import { SharedEntry } from '@/pages/shared-entry';
-import { JournalProvider } from '@/hooks/use-journal';
+import { JournalProvider, useJournal } from '@/hooks/use-journal';
 
 const queryClient = new QueryClient();
 
@@ -44,43 +44,62 @@ function Router() {
   );
 }
 
-function App() {
+// Inner component that has access to JournalProvider context
+function AppInner() {
   const isSharedRoute = window.location.pathname.startsWith('/shared/');
   const [isLocked, setIsLocked] = useState(!isSharedRoute);
   const [showInactivity, setShowInactivity] = useState(false);
+  const { refresh } = useJournal();
+  const hiddenTimeRef = useRef(0);
 
-  // Show inactivity overlay instead of reloading when app returns from background after >5 minutes
+  // Auto-refresh entries whenever the app becomes visible again
+  // This ensures notes written on another device always appear
   useEffect(() => {
-    let hiddenTime = 0;
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        hiddenTime = Date.now();
+        hiddenTimeRef.current = Date.now();
       } else {
-        // 5 minutes = 300000 ms
-        if (hiddenTime && Date.now() - hiddenTime > 300000) {
+        const awayMs = Date.now() - hiddenTimeRef.current;
+        if (hiddenTimeRef.current && awayMs > 300000) {
+          // Away > 5 min: show inactivity overlay (user will tap to refresh)
           setShowInactivity(true);
+        } else if (hiddenTimeRef.current && awayMs > 5000) {
+          // Away > 5 seconds: silently refresh entries in the background
+          refresh();
         }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  }, [refresh]);
 
+  const handleDismissInactivity = useCallback(() => {
+    setShowInactivity(false);
+    // Always do a fresh fetch when the user wakes the app back up
+    refresh();
+  }, [refresh]);
+
+  return (
+    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <AnimatePresence>
+        {showInactivity && (
+          <InactivityOverlay
+            key="inactivity"
+            onDismiss={handleDismissInactivity}
+          />
+        )}
+        {isLocked && !showInactivity && <PinLock onUnlock={() => setIsLocked(false)} key="lock" />}
+      </AnimatePresence>
+      {!isLocked && !showInactivity && <Router />}
+    </WouterRouter>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <JournalProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <AnimatePresence>
-            {showInactivity && (
-              <InactivityOverlay
-                key="inactivity"
-                onDismiss={() => setShowInactivity(false)}
-              />
-            )}
-            {isLocked && !showInactivity && <PinLock onUnlock={() => setIsLocked(false)} key="lock" />}
-          </AnimatePresence>
-          {!isLocked && !showInactivity && <Router />}
-        </WouterRouter>
+        <AppInner />
       </JournalProvider>
     </QueryClientProvider>
   );

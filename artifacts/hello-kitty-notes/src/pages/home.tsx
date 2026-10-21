@@ -6,7 +6,7 @@ import { MoodIcon } from '@/components/mood-icon';
 import { format } from 'date-fns';
 import { HeroHelloKitty, SadHelloKitty, StickerIcon } from '@/components/hello-kitty-svgs';
 import { RichText } from '@/components/rich-text';
-import { Search } from 'lucide-react';
+import { Search, RefreshCw } from 'lucide-react';
 
 const colorMap: Record<string, string> = {
   blush: 'bg-[#FFD1DC] text-[#4A3540] border-[#FFB7D1]',
@@ -47,8 +47,15 @@ function calculateMostUsedMood(entries: Entry[]) {
 }
 
 export function Home() {
-  const { entries, isLoaded } = useJournal();
+  const { entries, isLoaded, refresh } = useJournal();
   const [search, setSearch] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   if (!isLoaded) return (
     <div className="space-y-12 pb-20">
@@ -117,18 +124,28 @@ export function Home() {
       {/* Search & Hero Banner */}
       <div className="flex flex-col gap-8">
         
-        {/* Search Bar */}
-        <div className="relative w-full max-w-md mx-auto">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-primary">
-            <Search className="w-5 h-5" />
+        {/* Search Bar + Refresh */}
+        <div className="relative w-full max-w-md mx-auto flex gap-2">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-primary">
+              <Search className="w-5 h-5" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search my memories..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-12 pr-6 py-4 bg-white rounded-full border-2 border-primary/20 focus:border-primary outline-none shadow-sm focus:shadow-[0_4px_15px_rgba(255,79,139,0.15)] transition-all font-secondary text-lg"
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search my memories..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-12 pr-6 py-4 bg-white rounded-full border-2 border-primary/20 focus:border-primary outline-none shadow-sm focus:shadow-[0_4px_15px_rgba(255,79,139,0.15)] transition-all font-secondary text-lg"
-          />
+          {/* Refresh button */}
+          <button
+            onClick={handleRefresh}
+            title="Sync latest entries"
+            className="shrink-0 w-14 h-14 flex items-center justify-center rounded-full bg-white border-2 border-primary/20 text-primary shadow-sm hover:bg-primary/5 hover:border-primary/50 transition-all active:scale-95"
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
         {/* Hero Section */}
